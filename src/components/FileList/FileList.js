@@ -138,7 +138,20 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Unknown date';
-    return new Date(timestamp * 1000).toLocaleString();
+    
+    try {
+      // Ensure timestamp is properly converted to a regular number
+      // If it's already a number or a numeric string, parseInt will work fine
+      // If it's a BigNumber, it needs to be converted to a string first
+      const parsedTimestamp = typeof timestamp === 'object' && timestamp.toString 
+        ? parseInt(timestamp.toString(), 10) 
+        : parseInt(timestamp, 10);
+        
+      return new Date(parsedTimestamp * 1000).toLocaleString();
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return 'Invalid date';
+    }
   };
 
   if (files.length === 0) {

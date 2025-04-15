@@ -31,6 +31,7 @@ const Dashboard = () => {
       const result = await retrieveFiles();
       
       if (result) {
+        // Handle the file data in the updated format
         setFiles(result.userFiles || []);
         setSharedFiles(result.sharedFiles || []);
       }

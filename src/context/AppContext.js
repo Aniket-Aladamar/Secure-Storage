@@ -12,7 +12,7 @@ export const AppProvider = ({ children }) => {
   const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1NzBlOTU1My0wOTM0LTRjODEtYTM5ZS0wZDE4MmM2YWQ4ZmMiLCJlbWFpbCI6ImFuaWtldDMzNjY0NEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiMzViODY0ZDc3NWUwODdjZGI5ZGMiLCJzY29wZWRLZXlTZWNyZXQiOiJjMDYxMmE2YjY0YTU1YWRmNWVmMzViMzMyYjU3MmU1ZDJkNGU3ZmJkMzllM2Q5N2Y5N2FmYWYzYjZkNTA2MDNiIiwiZXhwIjoxNzY0NzQxMjI3fQ.DTptCZRgU4LhayDR054aPTAp1xsHXerf5xfM9SAu2io";
 
   // Smart contract details
-  const contractAddress = "0x90be63418fe26fe63b7d502c73fb5f9f2aa5175b";
+  const contractAddress = "0xA7bd79fa610a7adF93bbcafb3ffE141C2b8f19ed";
   
   // State
   const [provider, setProvider] = useState(null);
@@ -293,23 +293,35 @@ export const AppProvider = ({ children }) => {
     }
     
     try {
-      // Use the retrieve function which returns full file entries
-      const fileEntries = await contract.retrieve();
-      const ownedFiles = fileEntries.map(entry => ({
-        cid: entry.cid,
-        name: entry.name,
-        timestamp: entry.timestamp.toNumber(),
-        peopleWithAccess: entry.peopleWithAccess
-      }));
+      // Use the retrieve function which now returns arrays
+      const result = await contract.functions.retrieve();
+      const [cids, timestamps, names, peopleWithAccessArrays] = result;
       
-      // Check for shared files
-      const sharedFiles = await contract.retrieveSharedFiles();
-      const sharedFilesList = sharedFiles.map(entry => ({
-        cid: entry.cid,
-        name: entry.name,
-        timestamp: entry.timestamp.toNumber(),
-        owner: entry.owner
-      }));
+      const ownedFiles = [];
+      for (let i = 0; i < cids.length; i++) {
+        ownedFiles.push({
+          cid: cids[i],
+          name: names[i],
+          // Keep timestamps as strings to avoid overflow
+          timestamp: timestamps[i].toString(),
+          peopleWithAccess: peopleWithAccessArrays[i]
+        });
+      }
+      
+      // Check for shared files which now returns arrays in a different format
+      const sharedResult = await contract.functions.retrieveSharedFiles();
+      const [sharedCids, sharedTimestamps, sharedNames, sharedOwners] = sharedResult;
+      
+      const sharedFilesList = [];
+      for (let i = 0; i < sharedCids.length; i++) {
+        sharedFilesList.push({
+          cid: sharedCids[i],
+          name: sharedNames[i],
+          // Keep timestamps as strings to avoid overflow
+          timestamp: sharedTimestamps[i].toString(),
+          owner: sharedOwners[i]
+        });
+      }
       
       return {
         userFiles: ownedFiles,
@@ -448,7 +460,8 @@ export const AppProvider = ({ children }) => {
       const recipientEncryptedCid = CryptoJS.AES.encrypt(originalCid, recipientAddress).toString();
       
       // Share the re-encrypted CID with recipient via smart contract
-      const tx = await contract.updateAccess(recipientEncryptedCid, recipientAddress);
+      // Now using the new parameter for encryptedCid
+      const tx = await contract.updateAccess(cid, recipientAddress, recipientEncryptedCid);
       await tx.wait();
       
       // Save mapping between encrypted CID and original CID for reference
