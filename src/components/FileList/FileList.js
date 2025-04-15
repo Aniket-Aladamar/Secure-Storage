@@ -10,7 +10,9 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
   const [shareAddress, setShareAddress] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
   const [activeCid, setActiveCid] = useState('');
+  const [activeFile, setActiveFile] = useState(null);
   const [decryptKey, setDecryptKey] = useState('');
   const [needsDecryptKey, setNeedsDecryptKey] = useState(false);
 
@@ -19,7 +21,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     setStatusMessage('Fetching file content...');
     
     try {
-      // First try with any saved key or no key
       const content = await fetchFileFromIPFS(cid, decryptKey || null);
       setViewingFile(cid);
       setFileContent(content);
@@ -27,7 +28,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     } catch (error) {
       console.error('Error retrieving file:', error);
       if (error.message.includes('Decryption key') || error.message.includes('Decryption failed')) {
-        // Show the decrypt prompt if key is needed
         setViewingFile(cid);
         setFileContent(null); 
         setNeedsDecryptKey(true);
@@ -59,10 +59,17 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     }
   };
 
-  const handleShare = (cid) => {
+  const handleShare = (cid, file) => {
     setActiveCid(cid);
+    setActiveFile(file);
     setShareAddress('');
     setShowShareModal(true);
+  };
+
+  const handleViewAccess = (cid, file) => {
+    setActiveCid(cid);
+    setActiveFile(file);
+    setShowAccessModal(true);
   };
 
   const submitShare = async () => {
@@ -99,7 +106,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       await revokeAccess(cid, address);
       setStatusMessage('Access revoked successfully');
       setTimeout(() => setStatusMessage(''), 3000);
-      // Refresh the file list
       if (onUpdate) onUpdate();
     } catch (error) {
       setStatusMessage(`Error revoking access: ${error.message}`);
@@ -118,7 +124,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
         await deleteFile(cid);
         setStatusMessage('File deleted successfully');
         setTimeout(() => setStatusMessage(''), 3000);
-        // Refresh the file list
         if (onUpdate) onUpdate();
       } catch (error) {
         setStatusMessage(`Error deleting file: ${error.message}`);
@@ -140,9 +145,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     if (!timestamp) return 'Unknown date';
     
     try {
-      // Ensure timestamp is properly converted to a regular number
-      // If it's already a number or a numeric string, parseInt will work fine
-      // If it's a BigNumber, it needs to be converted to a string first
       const parsedTimestamp = typeof timestamp === 'object' && timestamp.toString 
         ? parseInt(timestamp.toString(), 10) 
         : parseInt(timestamp, 10);
@@ -192,10 +194,16 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                 {type === 'own' && (
                   <>
                     <button 
-                      onClick={() => handleShare(file.cid)}
+                      onClick={() => handleShare(file.cid, file)}
                       className="action-btn share-btn"
                     >
                       Share
+                    </button>
+                    <button 
+                      onClick={() => handleViewAccess(file.cid, file)}
+                      className="action-btn access-btn"
+                    >
+                      Access List
                     </button>
                     <button 
                       onClick={() => handleDelete(file.cid)}
@@ -211,7 +219,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
         </tbody>
       </table>
       
-      {/* File Viewer Modal */}
       {viewingFile && (
         <div className="modal-overlay">
           <div className="file-viewer-modal">
@@ -266,7 +273,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
         </div>
       )}
       
-      {/* Share Modal */}
       {showShareModal && (
         <div className="modal-overlay">
           <div className="share-modal">
@@ -275,6 +281,25 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
               <button onClick={handleCloseModal} className="close-btn">&times;</button>
             </div>
             <div className="modal-content">
+              {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 && (
+                <div className="current-access">
+                  <h4>Currently shared with:</h4>
+                  <ul className="access-list">
+                    {activeFile.peopleWithAccess.map((address, idx) => (
+                      <li key={idx} className="access-item">
+                        <span className="address-text">{address}</span>
+                        <button 
+                          onClick={() => handleRevoke(activeCid, address)}
+                          className="revoke-btn"
+                        >
+                          Revoke
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <p>Enter the Ethereum address to share this file with:</p>
               <input 
                 type="text"
@@ -283,6 +308,39 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                 placeholder="0x..."
               />
               <button onClick={submitShare} className="share-submit-btn">Share</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAccessModal && (
+        <div className="modal-overlay">
+          <div className="access-modal">
+            <div className="modal-header">
+              <h3>Access List for {activeFile?.name || 'File'}</h3>
+              <button onClick={() => setShowAccessModal(false)} className="close-btn">&times;</button>
+            </div>
+            <div className="modal-content">
+              {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 ? (
+                <div className="access-list-container">
+                  <h4>Users with access:</h4>
+                  <ul className="access-list">
+                    {activeFile.peopleWithAccess.map((address, idx) => (
+                      <li key={idx} className="access-item">
+                        <span className="address-text">{address}</span>
+                        <button 
+                          onClick={() => handleRevoke(activeCid, address)}
+                          className="revoke-btn"
+                        >
+                          Revoke Access
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p>No users have been granted access to this file.</p>
+              )}
             </div>
           </div>
         </div>
