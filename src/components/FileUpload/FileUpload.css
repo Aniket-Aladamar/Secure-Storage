@@ -1,0 +1,136 @@
+.file-upload-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.upload-instruction {
+  margin-bottom: 15px;
+}
+
+.upload-instruction p {
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.encryption-note {
+  background-color: #fff8e1;
+  padding: 12px;
+  border-left: 4px solid #ffc107;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.encryption-note p {
+  margin: 0;
+  color: #5d4037;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.file-input-container {
+  margin-bottom: 20px;
+}
+
+.file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.file-input-label {
+  display: block;
+  padding: 14px 20px;
+  background-color: #e9ecef;
+  color: #495057;
+  border: 2px dashed #ced4da;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input-label:hover {
+  background-color: #dee2e6;
+  border-color: #adb5bd;
+}
+
+.file-details {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.file-details p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.upload-button {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.upload-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.progress-container {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #ecf0f1;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #2ecc71;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #7f8c8d;
+  text-align: right;
+}
+
+.status-message {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #3498db;
+  color: #2c3e50;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .upload-button {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
