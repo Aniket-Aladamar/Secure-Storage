@@ -219,9 +219,9 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
         <tbody>
           {files.map((file, index) => (
             <tr key={index}>
-              <td>{file.name || 'Unnamed File'}</td>
-              <td>{formatTimestamp(file.timestamp)}</td>
-              <td className="actions-cell">
+              <td data-label="Name">{file.name || 'Unnamed File'}</td>
+              <td data-label="Upload Date">{formatTimestamp(file.timestamp)}</td>
+              <td data-label="Actions" className="actions-cell">
                 <button 
                   onClick={() => handleView(file.cid)}
                   className="action-btn view-btn"

@@ -461,3 +461,106 @@
   color: #7c8aff;
   font-style: italic;
 }
+
+/* Adding responsive styles for mobile view */
+@media (max-width: 768px) {
+  .file-table {
+    width: 100%;
+  }
+
+  .file-table th,
+  .file-table td {
+    padding: 12px 10px;
+  }
+  
+  .actions-cell {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .action-btn {
+    width: 100%;
+  }
+  
+  .file-viewer-modal,
+  .share-modal,
+  .access-modal {
+    width: 95%;
+  }
+}
+
+@media (max-width: 576px) {
+  .file-table {
+    display: block;
+  }
+  
+  .file-table thead {
+    display: none;
+  }
+  
+  .file-table tbody,
+  .file-table tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .file-table td {
+    display: flex;
+    text-align: left;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #2a2d38;
+  }
+  
+  .file-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #7c8aff;
+    margin-right: 10px;
+  }
+  
+  .file-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #2a2d38;
+    border-radius: 8px;
+    background: #1e2129;
+    overflow: hidden;
+  }
+  
+  .actions-cell {
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .action-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .modal-header h3 {
+    font-size: 16px;
+  }
+  
+  .modal-content {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 380px) {
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .actions-cell {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .modal-header {
+    padding: 15px;
+  }
+}
