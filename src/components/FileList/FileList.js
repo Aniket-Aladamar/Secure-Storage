@@ -171,6 +171,19 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
+  const tryFormatContent = (content) => {
+    try {
+      if (content.startsWith('data:application/json')) {
+        const jsonString = atob(content.split(',')[1]);
+        return JSON.stringify(JSON.parse(jsonString), null, 2);
+      }
+      return atob(content.split(',')[1]);
+    } catch (error) {
+      console.error('Error formatting content:', error);
+      return 'Error formatting content';
+    }
+  };
+
   if (files.length === 0) {
     return (
       <div className="file-list-container">
@@ -305,9 +318,64 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                       <source src={fileContent} type="audio/mpeg" />
                       Your browser does not support the audio element.
                     </audio>
+                  ) : typeof fileContent === 'string' && fileContent.startsWith('data:application/pdf') ? (
+                    <iframe 
+                      src={fileContent} 
+                      title="PDF Viewer" 
+                      className="pdf-viewer"
+                      width="100%" 
+                      height="500px"
+                    ></iframe>
+                  ) : typeof fileContent === 'string' && (fileContent.startsWith('data:text/') || fileContent.includes('data:application/json')) ? (
+                    <div className="text-content formatted">
+                      <pre>{tryFormatContent(fileContent)}</pre>
+                    </div>
+                  ) : typeof fileContent === 'string' && (
+                      fileContent.startsWith('data:text/html') || 
+                      fileContent.startsWith('data:text/css') ||
+                      fileContent.startsWith('data:text/javascript') ||
+                      fileContent.startsWith('data:application/xml')
+                    ) ? (
+                    <div className="code-content">
+                      <pre>{tryFormatContent(fileContent)}</pre>
+                    </div>
+                  ) : typeof fileContent === 'string' && fileContent.startsWith('data:application/vnd.openxmlformats-officedocument') ? (
+                    <div className="office-document-content">
+                      <p>This is a Microsoft Office document. Please download to view the content.</p>
+                      <a 
+                        href={fileContent} 
+                        download={activeFile && activeFile.name ? activeFile.name : "document"}
+                        className="download-btn"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Document
+                      </a>
+                    </div>
                   ) : (
                     <div className="text-content">
-                      <pre>{fileContent}</pre>
+                      {typeof fileContent === 'string' && fileContent.startsWith('data:') ? (
+                        <div className="generic-file-content">
+                          <p>File content preview not available. You can download the file to view it.</p>
+                          <a 
+                            href={fileContent} 
+                            download={activeFile && activeFile.name ? activeFile.name : "file"}
+                            className="download-btn"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="7 10 12 15 17 10"></polyline>
+                              <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download File
+                          </a>
+                        </div>
+                      ) : (
+                        <pre>{fileContent}</pre>
+                      )}
                     </div>
                   )}
                 </div>

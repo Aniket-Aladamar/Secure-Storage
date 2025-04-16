@@ -251,6 +251,75 @@
   border-radius: 8px;
 }
 
+.text-content.formatted pre {
+  max-height: 70vh;
+  overflow: auto;
+  padding: 20px;
+  background: #1e2129;
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.code-content {
+  font-family: 'Courier New', monospace;
+  color: #e0e0e0;
+}
+
+.code-content pre {
+  margin: 0;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 20px;
+  background: #1a1e25;
+  border-radius: 8px;
+  border-left: 3px solid #7c8aff;
+  line-height: 1.5;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.office-document-content, 
+.generic-file-content {
+  text-align: center;
+  padding: 40px 20px;
+  background: #1e2129;
+  border-radius: 8px;
+  color: #e0e0e0;
+}
+
+.office-document-content p,
+.generic-file-content p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #3a7bd5, #3a6073);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #2c3e50);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(58, 123, 213, 0.3);
+}
+
+.pdf-viewer {
+  border: none;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  min-height: 500px;
+}
+
 .share-modal {
   width: 450px;
 }
