@@ -14,6 +14,10 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
   const [activeFile, setActiveFile] = useState(null);
   const [decryptKey, setDecryptKey] = useState('');
   const [needsDecryptKey, setNeedsDecryptKey] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [sharingAddress, setSharingAddress] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [revokingAddress, setRevokingAddress] = useState('');
 
   const handleView = async (cid) => {
     setIsLoading(true);
@@ -71,6 +75,8 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       return;
     }
     
+    setIsSharing(true);
+    setSharingAddress(shareAddress);
     setIsLoading(true);
     setStatusMessage(`Sharing file with ${shareAddress}...`);
     
@@ -79,7 +85,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       setStatusMessage('File shared successfully');
       setTimeout(() => setStatusMessage(''), 3000);
       
-      // Update the active file's people with access list
       const updatedPeopleWithAccess = [...(activeFile.peopleWithAccess || [])];
       if (!updatedPeopleWithAccess.includes(shareAddress)) {
         updatedPeopleWithAccess.push(shareAddress);
@@ -91,15 +96,20 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       });
       
       if (onUpdate) onUpdate();
+      setShareAddress('');
     } catch (error) {
       setStatusMessage(`Error sharing file: ${error.message}`);
       console.error('Error sharing file:', error);
     } finally {
       setIsLoading(false);
+      setIsSharing(false);
+      setSharingAddress('');
     }
   };
 
   const handleRevoke = async (cid, address) => {
+    setIsRevoking(true);
+    setRevokingAddress(address);
     setIsLoading(true);
     setStatusMessage(`Revoking access for ${address}...`);
     
@@ -108,7 +118,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       setStatusMessage('Access revoked successfully');
       setTimeout(() => setStatusMessage(''), 3000);
       
-      // Update the active file's people with access list
       if (activeFile && activeFile.peopleWithAccess) {
         setActiveFile({
           ...activeFile,
@@ -122,6 +131,8 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       console.error('Error revoking access:', error);
     } finally {
       setIsLoading(false);
+      setIsRevoking(false);
+      setRevokingAddress('');
     }
   };
 
@@ -417,18 +428,36 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                 {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 ? (
                   <ul className="access-list">
                     {activeFile.peopleWithAccess.map((address, idx) => (
-                      <li key={idx} className="access-item">
-                        <span className="address-text">{truncateAddress(address)}</span>
+                      <li key={idx} className={`access-item ${revokingAddress === address ? 'transaction-loading' : ''}`}>
+                        <span className="address-text">
+                          {truncateAddress(address)}
+                          {revokingAddress === address && (
+                            <span className="transaction-status">
+                              <div className="transaction-loader"></div>
+                              Revoking...
+                            </span>
+                          )}
+                        </span>
                         <button 
                           onClick={() => handleRevoke(activeCid, address)}
                           className="revoke-btn"
+                          disabled={isRevoking}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}>
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="15" y1="9" x2="9" y2="15"></line>
-                            <line x1="9" y1="9" x2="15" y2="15"></line>
-                          </svg>
-                          Revoke
+                          {revokingAddress === address ? (
+                            <>
+                              <div className="btn-loader"></div>
+                              Revoking...
+                            </>
+                          ) : (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}>
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>
+                              Revoke
+                            </>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -454,14 +483,28 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                   value={shareAddress}
                   onChange={(e) => setShareAddress(e.target.value)}
                   placeholder="0x..."
+                  disabled={isSharing}
                 />
-                <button onClick={submitShare} className="share-submit-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                    <polyline points="16 6 12 2 8 6"></polyline>
-                    <line x1="12" y1="2" x2="12" y2="15"></line>
-                  </svg>
-                  Share File
+                <button 
+                  onClick={submitShare} 
+                  className="share-submit-btn"
+                  disabled={isSharing || !shareAddress.trim()}
+                >
+                  {isSharing ? (
+                    <>
+                      <div className="btn-loader"></div>
+                      Sharing...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                      </svg>
+                      Share File
+                    </>
+                  )}
                 </button>
               </div>
             </div>
