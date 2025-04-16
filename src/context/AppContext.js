@@ -397,42 +397,16 @@ export const AppProvider = ({ children }) => {
         throw new Error("Retrieved empty content from IPFS");
       }
       
-      // Get decryption key from provided key, saved keys, or current encryption key
+      // Only use the provided key - don't fall back to saved keys or current key
       let decryptKey = providedKey;
-      if (!decryptKey && savedEncryptionKeys[actualCid]) {
-        decryptKey = savedEncryptionKeys[actualCid].key;
-      } else if (!decryptKey && encryptionKey) {
-        decryptKey = encryptionKey;
-      }
 
       if (!decryptKey) {
-        throw new Error("Decryption key not found. Please provide a decryption key.");
+        throw new Error("Decryption key not provided. Please enter your decryption key.");
       }
       
       try {
         // Decrypt the file content
         const decryptedContent = decryptContent(encryptedContent, decryptKey);
-        
-        // If this is the first successful decryption with this key, save it for future use
-        if (providedKey && !savedEncryptionKeys[actualCid]) {
-          // Extract file info from the decrypted content to save with the key
-          let fileInfo = {
-            key: providedKey,
-            originalType: 'application/octet-stream',
-            originalName: actualCid
-          };
-          
-          // Try to detect file type from the decrypted content
-          if (decryptedContent.startsWith('data:')) {
-            const mimeMatch = decryptedContent.match(/data:([^;]+);/);
-            if (mimeMatch && mimeMatch[1]) {
-              fileInfo.originalType = mimeMatch[1];
-            }
-          }
-          
-          setSavedEncryptionKeys(prev => ({...prev, [actualCid]: fileInfo}));
-        }
-        
         return decryptedContent;
       } catch (decryptError) {
         console.error("Decryption error:", decryptError);

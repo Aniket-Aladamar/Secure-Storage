@@ -23,24 +23,13 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     setIsLoading(true);
     setStatusMessage('Fetching file content...');
     
-    try {
-      const content = await fetchFileFromIPFS(cid, decryptKey || null);
-      setViewingFile(cid);
-      setFileContent(content);
-      setNeedsDecryptKey(false);
-    } catch (error) {
-      console.error('Error retrieving file:', error);
-      if (error.message.includes('Decryption key') || error.message.includes('Decryption failed')) {
-        setViewingFile(cid);
-        setFileContent(null); 
-        setNeedsDecryptKey(true);
-        setStatusMessage('Please enter decryption key');
-      } else {
-        setStatusMessage(`Error retrieving file: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    // Always reset the decryption key and require it for each file view
+    setDecryptKey('');
+    setViewingFile(cid);
+    setFileContent(null);
+    setNeedsDecryptKey(true);
+    setStatusMessage('Please enter decryption key');
+    setIsLoading(false);
   };
 
   const handleDecryptWithKey = async () => {
