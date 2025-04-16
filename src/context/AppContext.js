@@ -8,11 +8,11 @@ const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
-  // Pinata JWT token
-  const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1NzBlOTU1My0wOTM0LTRjODEtYTM5ZS0wZDE4MmM2YWQ4ZmMiLCJlbWFpbCI6ImFuaWtldDMzNjY0NEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiMzViODY0ZDc3NWUwODdjZGI5ZGMiLCJzY29wZWRLZXlTZWNyZXQiOiJjMDYxMmE2YjY0YTU1YWRmNWVmMzViMzMyYjU3MmU1ZDJkNGU3ZmJkMzllM2Q5N2Y5N2FmYWYzYjZkNTA2MDNiIiwiZXhwIjoxNzY0NzQxMjI3fQ.DTptCZRgU4LhayDR054aPTAp1xsHXerf5xfM9SAu2io";
+  // Pinata JWT token from environment variable
+  const JWT = process.env.REACT_APP_PINATA_JWT;
 
-  // Smart contract details
-  const contractAddress = "0xA7bd79fa610a7adF93bbcafb3ffE141C2b8f19ed";
+  // Smart contract details from environment variable
+  const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
   
   // State
   const [provider, setProvider] = useState(null);
@@ -121,6 +121,18 @@ export const AppProvider = ({ children }) => {
     const randomKey = CryptoJS.lib.WordArray.random(16).toString();
     setEncryptionKey(randomKey);
     return randomKey;
+  };
+  
+  // Set a custom encryption key
+  const setCustomEncryptionKey = (customKey) => {
+    if (!customKey || customKey.trim() === '') {
+      throw new Error("Custom key cannot be empty");
+    }
+    
+    // Optionally strengthen the key by hashing it
+    const strengthenedKey = CryptoJS.SHA256(customKey).toString().substring(0, 32);
+    setEncryptionKey(strengthenedKey);
+    return strengthenedKey;
   };
 
   // Encrypt a file
@@ -525,6 +537,7 @@ export const AppProvider = ({ children }) => {
       connectWallet,
       encryptionKey,
       generateEncryptionKey,
+      setCustomEncryptionKey,
       uploadFile,
       retrieveFiles,
       fetchFileFromIPFS,

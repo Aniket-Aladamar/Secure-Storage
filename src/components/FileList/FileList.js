@@ -9,7 +9,6 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [shareAddress, setShareAddress] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const [showShareModal, setShowShareModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [activeCid, setActiveCid] = useState('');
   const [activeFile, setActiveFile] = useState(null);
@@ -59,16 +58,10 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     }
   };
 
-  const handleShare = (cid, file) => {
-    setActiveCid(cid);
-    setActiveFile(file);
-    setShareAddress('');
-    setShowShareModal(true);
-  };
-
   const handleViewAccess = (cid, file) => {
     setActiveCid(cid);
     setActiveFile(file);
+    setShareAddress('');
     setShowAccessModal(true);
   };
 
@@ -83,19 +76,27 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     
     try {
       await shareFile(activeCid, shareAddress);
-      setShowShareModal(false);
       setStatusMessage('File shared successfully');
       setTimeout(() => setStatusMessage(''), 3000);
+      
+      // Update the active file's people with access list
+      const updatedPeopleWithAccess = [...(activeFile.peopleWithAccess || [])];
+      if (!updatedPeopleWithAccess.includes(shareAddress)) {
+        updatedPeopleWithAccess.push(shareAddress);
+      }
+      
+      setActiveFile({
+        ...activeFile,
+        peopleWithAccess: updatedPeopleWithAccess
+      });
+      
+      if (onUpdate) onUpdate();
     } catch (error) {
       setStatusMessage(`Error sharing file: ${error.message}`);
       console.error('Error sharing file:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCloseModal = () => {
-    setShowShareModal(false);
   };
 
   const handleRevoke = async (cid, address) => {
@@ -106,6 +107,15 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       await revokeAccess(cid, address);
       setStatusMessage('Access revoked successfully');
       setTimeout(() => setStatusMessage(''), 3000);
+      
+      // Update the active file's people with access list
+      if (activeFile && activeFile.peopleWithAccess) {
+        setActiveFile({
+          ...activeFile,
+          peopleWithAccess: activeFile.peopleWithAccess.filter(a => a !== address)
+        });
+      }
+      
       if (onUpdate) onUpdate();
     } catch (error) {
       setStatusMessage(`Error revoking access: ${error.message}`);
@@ -156,8 +166,23 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     }
   };
 
+  const truncateAddress = (address) => {
+    if (!address || address.length < 10) return address;
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
   if (files.length === 0) {
-    return <div className="no-files">No files found</div>;
+    return (
+      <div className="file-list-container">
+        <div className="no-files">
+          <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+          </svg>
+          <p>No files found in your storage</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -188,27 +213,33 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                   onClick={() => handleView(file.cid)}
                   className="action-btn view-btn"
                 >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
                   View
                 </button>
                 
                 {type === 'own' && (
                   <>
                     <button 
-                      onClick={() => handleShare(file.cid, file)}
-                      className="action-btn share-btn"
-                    >
-                      Share
-                    </button>
-                    <button 
                       onClick={() => handleViewAccess(file.cid, file)}
                       className="action-btn access-btn"
                     >
-                      Access List
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                      Access Management
                     </button>
                     <button 
                       onClick={() => handleDelete(file.cid)}
                       className="action-btn delete-btn"
                     >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
                       Delete
                     </button>
                   </>
@@ -223,12 +254,25 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
         <div className="modal-overlay">
           <div className="file-viewer-modal">
             <div className="modal-header">
-              <h3>File Viewer</h3>
+              <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                File Viewer
+              </h3>
               <button onClick={handleCloseViewer} className="close-btn">&times;</button>
             </div>
             <div className="modal-content">
               {needsDecryptKey ? (
                 <div className="decrypt-prompt">
+                  <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
                   <p>Enter decryption key to view this file:</p>
                   <input 
                     type="text"
@@ -240,6 +284,10 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
                     onClick={handleDecryptWithKey} 
                     className="decrypt-btn"
                   >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
                     Decrypt & View
                   </button>
                 </div>
@@ -272,75 +320,82 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
           </div>
         </div>
       )}
-      
-      {showShareModal && (
-        <div className="modal-overlay">
-          <div className="share-modal">
-            <div className="modal-header">
-              <h3>Share File</h3>
-              <button onClick={handleCloseModal} className="close-btn">&times;</button>
-            </div>
-            <div className="modal-content">
-              {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 && (
-                <div className="current-access">
-                  <h4>Currently shared with:</h4>
-                  <ul className="access-list">
-                    {activeFile.peopleWithAccess.map((address, idx) => (
-                      <li key={idx} className="access-item">
-                        <span className="address-text">{address}</span>
-                        <button 
-                          onClick={() => handleRevoke(activeCid, address)}
-                          className="revoke-btn"
-                        >
-                          Revoke
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              <p>Enter the Ethereum address to share this file with:</p>
-              <input 
-                type="text"
-                value={shareAddress}
-                onChange={(e) => setShareAddress(e.target.value)}
-                placeholder="0x..."
-              />
-              <button onClick={submitShare} className="share-submit-btn">Share</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showAccessModal && (
         <div className="modal-overlay">
           <div className="access-modal">
             <div className="modal-header">
-              <h3>Access List for {activeFile?.name || 'File'}</h3>
+              <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Access Management
+              </h3>
               <button onClick={() => setShowAccessModal(false)} className="close-btn">&times;</button>
             </div>
             <div className="modal-content">
-              {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 ? (
-                <div className="access-list-container">
-                  <h4>Users with access:</h4>
+              <div className="access-list-container">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Users with access:
+                </h4>
+                
+                {activeFile && activeFile.peopleWithAccess && activeFile.peopleWithAccess.length > 0 ? (
                   <ul className="access-list">
                     {activeFile.peopleWithAccess.map((address, idx) => (
                       <li key={idx} className="access-item">
-                        <span className="address-text">{address}</span>
+                        <span className="address-text">{truncateAddress(address)}</span>
                         <button 
                           onClick={() => handleRevoke(activeCid, address)}
                           className="revoke-btn"
                         >
-                          Revoke Access
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}>
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                          </svg>
+                          Revoke
                         </button>
                       </li>
                     ))}
                   </ul>
-                </div>
-              ) : (
-                <p>No users have been granted access to this file.</p>
-              )}
+                ) : (
+                  <div className="no-access">No users have been granted access to this file.</div>
+                )}
+              </div>
+
+              <div className="add-user-form">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}>
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                  </svg>
+                  Share with a new user
+                </h4>
+                <p>Enter the Ethereum address to share this file with:</p>
+                <input 
+                  type="text"
+                  value={shareAddress}
+                  onChange={(e) => setShareAddress(e.target.value)}
+                  placeholder="0x..."
+                />
+                <button onClick={submitShare} className="share-submit-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                    <polyline points="16 6 12 2 8 6"></polyline>
+                    <line x1="12" y1="2" x2="12" y2="15"></line>
+                  </svg>
+                  Share File
+                </button>
+              </div>
             </div>
           </div>
         </div>
