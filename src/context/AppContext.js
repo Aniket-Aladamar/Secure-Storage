@@ -129,10 +129,9 @@ export const AppProvider = ({ children }) => {
       throw new Error("Custom key cannot be empty");
     }
     
-    // Optionally strengthen the key by hashing it
-    const strengthenedKey = CryptoJS.SHA256(customKey).toString().substring(0, 32);
-    setEncryptionKey(strengthenedKey);
-    return strengthenedKey;
+    // Use the original key directly instead of transforming it
+    setEncryptionKey(customKey);
+    return customKey;
   };
 
   // Encrypt a file

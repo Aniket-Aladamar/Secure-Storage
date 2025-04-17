@@ -264,8 +264,8 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       </table>
       
       {viewingFile && (
-        <div className="modal-overlay">
-          <div className="file-viewer-modal">
+        <div className="modal-overlay" onClick={handleCloseViewer}>
+          <div className="file-viewer-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>
@@ -390,8 +390,8 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       )}
 
       {showAccessModal && (
-        <div className="modal-overlay">
-          <div className="access-modal">
+        <div className="modal-overlay" onClick={() => setShowAccessModal(false)}>
+          <div className="access-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>

@@ -42,9 +42,14 @@ const FileUpload = ({ onUploadComplete }) => {
       return;
     }
     
-    setCustomEncryptionKey(customKey);
-    setStatusMessage('Custom encryption key set successfully');
-    setCurrentKey(customKey);
+    try {
+      // Now using the original key directly without transformation
+      setCustomEncryptionKey(customKey);
+      setStatusMessage('Custom encryption key set successfully');
+      setCurrentKey(customKey);
+    } catch (error) {
+      setStatusMessage(`Error setting key: ${error.message}`);
+    }
   };
 
   const handleCopyKey = () => {
