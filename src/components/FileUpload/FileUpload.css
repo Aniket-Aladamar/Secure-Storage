@@ -82,26 +82,39 @@
 }
 
 .key-button {
-  padding: 12px;
-  background: linear-gradient(135deg, #3a7bd5, #3a6073);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  background-color: #1c1f2e;
+  color: #e0e0e0;
+  border: 1px solid #303450;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s ease;
-  flex: 1;
+  font-size: 14px;
 }
 
-.key-button:hover {
-  background: linear-gradient(135deg, #2980b9, #2c3e50);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(58, 123, 213, 0.3);
+.key-button:hover:not(:disabled) {
+  background-color: #262a3c;
+  border-color: #4d5275;
+}
+
+.key-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #2a2e43;
+}
+
+.key-button.key-strong {
+  border-color: #23d160;
+  box-shadow: 0 0 0 1px rgba(35, 209, 96, 0.2);
+}
+
+.key-button.key-strong:hover {
+  background-color: rgba(35, 209, 96, 0.1);
 }
 
 .custom-key-input {
@@ -269,6 +282,133 @@
   margin: 12px 0 0;
   opacity: 0.7;
   text-align: center;
+}
+
+.password-strength-container {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.password-strength-meter {
+  height: 8px;
+  background-color: #2a2a3a;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.password-strength-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength-fill.score-0 {
+  background-color: transparent;
+}
+
+.password-strength-fill.score-1 {
+  background-color: #ff3860; /* Very Weak - Red */
+}
+
+.password-strength-fill.score-2 {
+  background-color: #ff8c42; /* Weak - Orange */
+}
+
+.password-strength-fill.score-3 {
+  background-color: #ffdd57; /* Moderate - Yellow */
+}
+
+.password-strength-fill.score-4 {
+  background-color: #78e08f; /* Strong - Light Green */
+}
+
+.password-strength-fill.score-5,
+.password-strength-fill.score-6 {
+  background-color: #23d160; /* Very Strong - Green */
+}
+
+.password-strength-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #b5b5c3;
+}
+
+.password-strength-text svg {
+  color: #7c8aff;
+}
+
+.password-requirements {
+  margin-top: 12px;
+  padding: 10px;
+  background-color: rgba(124, 138, 255, 0.05);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.password-requirements small {
+  display: block;
+  margin-bottom: 5px;
+  color: #a0a0b0;
+}
+
+.password-requirements ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 5px 0 0 0;
+}
+
+.password-requirements li {
+  margin-bottom: 3px;
+  color: #888;
+  position: relative;
+  padding-left: 20px;
+}
+
+.password-requirements li::before {
+  content: "○";
+  position: absolute;
+  left: 0;
+  color: #888;
+}
+
+.password-requirements li.requirement-met {
+  color: #7c8aff;
+}
+
+.password-requirements li.requirement-met::before {
+  content: "●";
+  color: #7c8aff;
+}
+
+.strength-note {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.note-warning {
+  color: #ffdd57;
+}
+
+.note-success {
+  color: #23d160;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake-animation {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+  background-color: rgba(255, 56, 96, 0.1);
+  border-left: 3px solid #ff3860;
 }
 
 @media (max-width: 768px) {

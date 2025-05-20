@@ -11,11 +11,72 @@ const FileUpload = ({ onUploadComplete }) => {
   const [activeTab, setActiveTab] = useState('generate');
   const [customKey, setCustomKey] = useState('');
   const [currentKey, setCurrentKey] = useState(encryptionKey || '');
-
-  // Update the current key when the app context key changes
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: ''
+  });
+    // Update the current key when the app context key changes
   useEffect(() => {
     setCurrentKey(encryptionKey || '');
   }, [encryptionKey]);
+
+  // Password strength checker function
+  const checkPasswordStrength = (password) => {
+    if (!password) {
+      setPasswordStrength({ score: 0, feedback: '' });
+      return;
+    }
+
+    let score = 0;
+    let feedback = '';
+
+    // Check length
+    if (password.length >= 12) {
+      score += 2;
+    } else if (password.length >= 8) {
+      score += 1;
+    }
+
+    // Check for uppercase letters
+    if (/[A-Z]/.test(password)) {
+      score += 1;
+    }
+
+    // Check for lowercase letters
+    if (/[a-z]/.test(password)) {
+      score += 1;
+    }
+
+    // Check for numbers
+    if (/[0-9]/.test(password)) {
+      score += 1;
+    }
+
+    // Check for special characters
+    if (/[^A-Za-z0-9]/.test(password)) {
+      score += 1;
+    }
+
+    // Provide feedback based on score
+    if (score < 2) {
+      feedback = 'Very weak password. Consider using a longer password with mixed characters.';
+    } else if (score < 3) {
+      feedback = 'Weak password. Add more character types.';
+    } else if (score < 4) {
+      feedback = 'Moderate password. Add more complexity for better security.';
+    } else if (score < 5) {
+      feedback = 'Strong password!';
+    } else {
+      feedback = 'Very strong password!';
+    }
+
+    setPasswordStrength({ score, feedback });
+  };
+
+  // Update password strength when custom key changes
+  useEffect(() => {
+    checkPasswordStrength(customKey);
+  }, [customKey]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -34,11 +95,25 @@ const FileUpload = ({ onUploadComplete }) => {
   const handleGenerateKey = () => {
     generateEncryptionKey();
     setStatusMessage('New encryption key generated!');
-  };
-
-  const handleSetCustomKey = () => {
+  };  const handleSetCustomKey = () => {
     if (!customKey.trim()) {
       setStatusMessage('Please enter a custom key first');
+      return;
+    }
+    
+    // Check if the password is at least strong (score >= 4)
+    if (passwordStrength.score < 4) {
+      setStatusMessage('Please use a stronger password. Your encryption key should have a minimum strength of "Strong".');
+      
+      // Add animation class to highlight requirements
+      const requirementsElement = document.querySelector('.password-requirements');
+      if (requirementsElement) {
+        requirementsElement.classList.add('shake-animation');
+        setTimeout(() => {
+          requirementsElement.classList.remove('shake-animation');
+        }, 820);
+      }
+      
       return;
     }
     
@@ -242,15 +317,18 @@ const FileUpload = ({ onUploadComplete }) => {
               </button>
             </div>
           ) : (
-            <div>
-              <input
+            <div>              <input
                 type="text"
                 placeholder="Enter your custom encryption key"
                 value={customKey}
                 onChange={(e) => setCustomKey(e.target.value)}
                 className="custom-key-input"
               />
-              <button onClick={handleSetCustomKey} className="key-button">
+              <button 
+                onClick={handleSetCustomKey} 
+                className={`key-button ${customKey && passwordStrength.score >= 4 ? 'key-strong' : ''}`}
+                disabled={!customKey || passwordStrength.score < 4}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -258,6 +336,48 @@ const FileUpload = ({ onUploadComplete }) => {
                 </svg>
                 Set Custom Key
               </button>
+                {customKey && (
+                <div className="password-strength-container">
+                  <div className="password-strength-meter">
+                    <div 
+                      className={`password-strength-fill score-${passwordStrength.score}`} 
+                      style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="password-strength-text">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    {passwordStrength.feedback}
+                  </div>                  <div className="password-requirements">
+                    <small>For a strong password, include:</small>
+                    <ul>
+                      <li className={customKey.length >= 12 ? 'requirement-met' : ''}>
+                        At least 12 characters
+                      </li>
+                      <li className={/[A-Z]/.test(customKey) ? 'requirement-met' : ''}>
+                        Uppercase letters (A-Z)
+                      </li>
+                      <li className={/[a-z]/.test(customKey) ? 'requirement-met' : ''}>
+                        Lowercase letters (a-z)
+                      </li>
+                      <li className={/[0-9]/.test(customKey) ? 'requirement-met' : ''}>
+                        Numbers (0-9)
+                      </li>
+                      <li className={/[^A-Za-z0-9]/.test(customKey) ? 'requirement-met' : ''}>
+                        Special characters (!@#$%^&*)
+                      </li>
+                    </ul>
+                    <div className="strength-note">
+                      <span className={passwordStrength.score >= 4 ? 'note-success' : 'note-warning'}>
+                        {passwordStrength.score >= 4 
+                          ? '✓ Encryption key meets minimum strength requirements' 
+                          : '⚠️ Encryption key must be at least "Strong" to be accepted'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
