@@ -170,7 +170,6 @@ export const AppProvider = ({ children }) => {
       reader.readAsDataURL(file);  // Using DataURL to handle all file types
     });
   };
-
   // Decrypt file content
   const decryptContent = (encryptedContent, key) => {
     try {
@@ -182,6 +181,10 @@ export const AppProvider = ({ children }) => {
       return decrypted;
     } catch (error) {
       console.error("Decryption failed:", error);
+      // Check if it's a Malformed UTF-8 data error which typically indicates a wrong key
+      if (error.message && error.message.includes('Malformed UTF-8 data')) {
+        throw new Error("Incorrect password entered. Please try again with the correct key.");
+      }
       throw new Error("Decryption failed. Please check your encryption key.");
     }
   };
@@ -402,14 +405,14 @@ export const AppProvider = ({ children }) => {
       if (!decryptKey) {
         throw new Error("Decryption key not provided. Please enter your decryption key.");
       }
-      
-      try {
+        try {
         // Decrypt the file content
         const decryptedContent = decryptContent(encryptedContent, decryptKey);
         return decryptedContent;
       } catch (decryptError) {
         console.error("Decryption error:", decryptError);
-        throw new Error("Decryption failed. Please check your decryption key.");
+        // Pass through the error message from decryptContent for more specific feedback
+        throw decryptError;
       }
     } catch (error) {
       console.error("Error fetching file from IPFS:", error);

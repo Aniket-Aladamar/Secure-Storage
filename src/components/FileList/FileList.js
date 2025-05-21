@@ -18,6 +18,7 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
   const [sharingAddress, setSharingAddress] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
   const [revokingAddress, setRevokingAddress] = useState('');
+  const [passwordError, setPasswordError] = useState({ show: false, message: '' });
 
   const handleView = async (cid) => {
     setIsLoading(true);
@@ -29,14 +30,14 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
     setFileContent(null);
     setNeedsDecryptKey(true);
     setStatusMessage('Please enter decryption key');
+    setPasswordError({ show: false, message: '' });
     setIsLoading(false);
-  };
-
-  const handleDecryptWithKey = async () => {
+  };  const handleDecryptWithKey = async () => {
     if (!decryptKey || !viewingFile) return;
     
     setIsLoading(true);
     setStatusMessage('Decrypting file content...');
+    setPasswordError({ show: false, message: '' }); // Reset error state when attempting
     
     try {
       const content = await fetchFileFromIPFS(viewingFile, decryptKey);
@@ -45,7 +46,17 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       setStatusMessage('');
     } catch (error) {
       console.error('Error decrypting file:', error);
-      setStatusMessage(`Decryption failed. Please check your key.`);
+      // Check if it's specifically a decryption error (incorrect password)
+      if (error.message.includes('Decryption failed') || error.message.includes('Malformed UTF-8 data') || error.message.includes('Incorrect password')) {
+        setStatusMessage(`Incorrect password. Please check your decryption key and try again.`);
+        // Show the dedicated password error alert
+        setPasswordError({ 
+          show: true, 
+          message: 'The decryption key you entered is incorrect. Please verify your key and try again.'
+        });
+      } else {
+        setStatusMessage(`Decryption failed. Please check your key.`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -143,12 +154,12 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       }
     }
   };
-
   const handleCloseViewer = () => {
     setViewingFile(null);
     setFileContent(null);
     setDecryptKey('');
     setNeedsDecryptKey(false);
+    setPasswordError({ show: false, message: '' }); // Clear password error on close
   };
 
   const formatTimestamp = (timestamp) => {
@@ -197,10 +208,20 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
       </div>
     );
   }
-
   return (
     <div className="file-list-container">
-      {statusMessage && <div className="status-message">{statusMessage}</div>}
+      {statusMessage && (
+        <div className={`status-message ${statusMessage.includes('Incorrect') || statusMessage.includes('failed') ? 'error-message' : ''}`}>
+          {statusMessage.includes('Incorrect') && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          )}
+          {statusMessage}
+        </div>
+      )}
       
       {isLoading && (
         <div className="loading-overlay">
@@ -279,20 +300,36 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
               </h3>
               <button onClick={handleCloseViewer} className="close-btn">&times;</button>
             </div>
-            <div className="modal-content">
-              {needsDecryptKey ? (
+            <div className="modal-content">              {needsDecryptKey ? (
                 <div className="decrypt-prompt">
                   <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
+                  <h4>End-to-End Encrypted File</h4>
                   <p>Enter decryption key to view this file:</p>
-                  <input 
-                    type="text"
-                    value={decryptKey}
-                    onChange={(e) => setDecryptKey(e.target.value)}
-                    placeholder="Paste your decryption key"
-                  />
+                  <div className="decrypt-input-container">
+                    <input 
+                      type="text"
+                      value={decryptKey}
+                      onChange={(e) => setDecryptKey(e.target.value)}
+                      placeholder="Paste your decryption key"
+                      className={statusMessage.includes('Incorrect') ? 'error-input' : ''}
+                      onKeyPress={(e) => e.key === 'Enter' && handleDecryptWithKey()}
+                    />
+                  </div>
+                  <div className="decrypt-info-message">
+                    <div className="info-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c8aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                    </div>
+                    <div className="info-text">
+                      This file is encrypted with end-to-end encryption. You need the same key that was used during upload to decrypt it. If you enter an incorrect key, you'll receive an "Incorrect password" error.
+                    </div>
+                  </div>
                   <button 
                     onClick={handleDecryptWithKey} 
                     className="decrypt-btn"

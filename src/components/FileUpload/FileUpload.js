@@ -102,7 +102,7 @@ const FileUpload = ({ onUploadComplete }) => {
     }
     
     // Check if the password is at least strong (score >= 4)
-    if (passwordStrength.score < 4) {
+    if (passwordStrength.score < 5) {
       setStatusMessage('Please use a stronger password. Your encryption key should have a minimum strength of "Strong".');
       
       // Add animation class to highlight requirements
