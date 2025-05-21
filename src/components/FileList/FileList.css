@@ -134,7 +134,18 @@
 
 @media only screen and (min-width: 768px) {
   .file-viewer-modal {
-    margin-top: 20%;
+    margin-top: 18%;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .file-viewer-modal {
+    margin-top: 0;
+    height: 95vh;
+  }
+  
+  .file-content {
+    max-height: 60vh;
   }
 }
 
@@ -250,6 +261,32 @@
   margin: 0 auto;
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+video {
+  width: 100%;
+  max-height: 70vh;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  object-fit: contain;
+}
+
+.video-content {
+  background-color: #0a0c10;
+  padding: 10px;
+  border: 1px solid rgba(124, 138, 255, 0.15);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
 }
 
 .text-content {
@@ -581,6 +618,19 @@
   .access-modal {
     width: 95%;
   }
+  
+  .video-content {
+    padding: 5px;
+    max-width: 100%;
+  }
+  
+  video {
+    max-height: 50vh;
+  }
+  
+  .file-content {
+    padding: 10px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -641,6 +691,16 @@
   .modal-content {
     padding: 15px;
   }
+  
+  .video-content {
+    padding: 3px;
+    border-width: 1px;
+  }
+  
+  video {
+    max-height: 45vh;
+    border-radius: 4px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -656,6 +716,21 @@
   
   .modal-header {
     padding: 15px;
+  }
+  
+  .video-content {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+  
+  video {
+    max-height: 40vh;
+  }
+  
+  .download-btn {
+    padding: 8px 16px;
+    font-size: 12px;
   }
 }
 

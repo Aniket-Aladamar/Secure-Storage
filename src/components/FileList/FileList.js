@@ -307,9 +307,8 @@ const FileList = ({ files = [], type = 'own', onUpdate }) => {
               ) : fileContent ? (
                 <div className="file-content">
                   {typeof fileContent === 'string' && fileContent.startsWith('data:image') ? (
-                    <img src={fileContent} alt="File content" className="content-image" />
-                  ) : typeof fileContent === 'string' && fileContent.startsWith('data:video') ? (
-                    <video controls>
+                    <img src={fileContent} alt="File content" className="content-image" />) : typeof fileContent === 'string' && fileContent.startsWith('data:video') ? (
+                    <video controls className="video-content">
                       <source src={fileContent} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
